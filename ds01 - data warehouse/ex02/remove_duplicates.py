@@ -1,4 +1,3 @@
-import re
 import psycopg2
 from abc import ABC
 from abc import abstractmethod
@@ -57,6 +56,7 @@ def main():
         customer.close()
     except Exception as err:
         print(f'Error: {err}')
+
 
 if __name__ == '__main__':
     main()

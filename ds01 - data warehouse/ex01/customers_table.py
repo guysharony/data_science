@@ -18,7 +18,7 @@ class Connection(ABC):
     def close(self):
         self.cursor.close()
         self.connect.close()
-    
+
     @property
     def tables(self):
         self.cursor.execute("""
@@ -26,17 +26,18 @@ class Connection(ABC):
             FROM information_schema.tables
             WHERE table_schema='public';
         """)
-        return self.cursor.fetchall()
+        return [table[0] for table in (self.cursor.fetchall() or [])]
 
     def tables_pattern(self, pattern):
         return [
-            table[0] for table in self.tables if re.match(pattern, table[0])
+            table for table in self.tables if re.match(pattern, table)
         ]
 
     def union_all(self, tables: list[str]):
         return " UNION ALL ".join(
             f"SELECT * FROM {table}" for table in tables
         )
+
 
 class Customers(Connection):
     def __init__(self, username: str, password: str, database: str) -> None:
@@ -61,6 +62,7 @@ def main():
         customer.close()
     except Exception as err:
         print(f'Error: {err}')
+
 
 if __name__ == '__main__':
     main()

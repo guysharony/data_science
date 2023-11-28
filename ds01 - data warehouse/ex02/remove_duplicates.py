@@ -26,6 +26,8 @@ class Customers(Connection):
     def remove_duplicates(self, table: str):
         temporary_table = f"{table}_temporary"
 
+        print(f"[REMOVING ALL DUPLICATES FROM '{table}'] => ", end="", flush=True)
+
         self.cursor.execute(f"""
             CREATE TEMPORARY TABLE {temporary_table} AS
             SELECT DISTINCT *
@@ -47,6 +49,8 @@ class Customers(Connection):
         """)
 
         self.connect.commit()
+
+        print("REMOVED")
 
 
 def main():

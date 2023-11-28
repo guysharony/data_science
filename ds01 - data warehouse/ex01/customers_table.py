@@ -46,6 +46,8 @@ class Customers(Connection):
     def join_tables(self, table: str, pattern):
         tables = self.tables_pattern(pattern)
 
+        print(f"[CREATING TABLE - '{table}'] => ", end="", flush=True)
+
         self.cursor.execute(f"""
             CREATE TABLE IF NOT EXISTS {table} AS (
                 {self.union_all(tables)}
@@ -53,6 +55,8 @@ class Customers(Connection):
         """)
 
         self.connect.commit()
+
+        print("CREATED")
 
 
 def main():

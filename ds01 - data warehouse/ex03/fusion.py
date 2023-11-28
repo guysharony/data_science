@@ -34,7 +34,7 @@ class Connection(ABC):
         query = ",".join([f"ADD COLUMN {k} {v}" for k, v in colomns.items()])
 
         self.cursor.execute(f"""
-            ALTER TABLE {name} ({query})
+            ALTER TABLE {name} {query}
         """)
 
     def insert_to_table(self, name: str, row: list[str]):

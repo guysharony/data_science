@@ -1,10 +1,5 @@
-#"INSERT INTO data_2022_dec (event_time, event_type, product_id, price, user_id, user_session) VALUES ('2022-12-30 18:52:27 UTC', 'view', 5759913, 0.79, 594994377, '02da5faa-c6d1-4c55-9f99-9d52c3963900'::UUID)"
-
-#"INSERT INTO data_2022_dec (event_time, event_type, product_id, price, user_id, user_session) VALUES ('2022-12-30 18:52:27 UTC', 'view', 5759913, 0.79, 594994377, '02da5faa-c6d1-4c55-9f99-9d52c3963900'::UUID)"
-
-import psycopg2
-import pandas as pd
 import csv
+import psycopg2
 from os import path
 from sys import argv
 from abc import ABC

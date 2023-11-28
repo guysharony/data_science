@@ -1,61 +1,90 @@
+import csv
+import psycopg2
 from os import path
 from sys import argv
-import pandas as pd
-from abc import ABC, abstractmethod
-from sqlalchemy import create_engine
-from sqlalchemy import MetaData
-from sqlalchemy import types
+from abc import ABC
+from abc import abstractmethod
 
 
 class Connection(ABC):
     @abstractmethod
-    def __init__(self, username: str, password: str, database: str) -> None:
+    def __init__(self, dbname: str, user: str, password: str) -> None:
         super().__init__()
-        self.engine = create_engine(f"postgresql://{username}:{password}@localhost:5432/{database}")
+        self.connect = psycopg2.connect(
+            dbname=dbname,
+            user=user,
+            password=password
+        )
+        self.cursor = self.connect.cursor()
 
-    def is_table(self, name: str):
-        metadata = MetaData()
-        metadata.reflect(self.engine)
-
-        return name in metadata.tables
+    def close(self):
+        self.cursor.close()
+        self.connect.close()
     
-    def dispose(self):
-        self.engine.dispose()
+    @property
+    def tables(self):
+        self.cursor.execute("""
+            SELECT table_name
+            FROM information_schema.tables
+            WHERE table_schema='public';
+        """)
+        return [table[0] for table in (self.cursor.fetchall() or [])]
+    
+    def create_table(self, name: str, colomns: dict[str, str]):
+        query = ",".join([f"{k} {v}" for k, v in colomns.items()])
 
-class Customer(Connection):
+        self.cursor.execute(f"""
+            CREATE TABLE {name} ({query})
+        """)
+
+    def insert_to_table(self, name: str, row: list[str]):
+        values = [None if len(v) == 0 else v for v in row]
+        pre_values = ', '.join('%s' for _ in range(len(values)))
+        query = f"INSERT INTO {name} VALUES ({pre_values})"
+        self.cursor.execute(query, values)
+
+class Customers(Connection):
     def __init__(self, username: str, password: str, database: str) -> None:
         super().__init__(username, password, database)
 
     def create_table_from_cvs(self, file: str, name: str = None):
         if name is None:
-            filename = path.basename(file)
-            name = path.splitext(filename)[0]
+            name = path.splitext(path.basename(file))[0]
 
         print(f"[CREATING TABLE - '{name}'] => ", end="", flush=True)
 
-        if self.is_table(name):
+        if name in self.tables:
             print('ALREADY EXISTS')
             return False
 
-        data = pd.read_csv(file)
-        data_types = {
-            "product_id": types.Integer(),
-            "category_id": types.BigInteger(),
-            "category_code": types.String(length=255),
-            "brand": types.String(length=255),
-        }
-        data.to_sql(name, self.engine, index=False, dtype=data_types)
+        self.create_table(name, {
+            "event_time": "TIMESTAMP WITHOUT TIME ZONE",
+            "event_type": "VARCHAR(255)",
+            "product_id": "INTEGER",
+            "price": "FLOAT",
+            "user_id": "BIGINT",
+            "user_session": "UUID"
+        })
+
+        with open(file, 'r') as csvfile:
+            csv_reader = csv.reader(csvfile)
+            next(csv_reader)
+            for row in csv_reader:
+                self.insert_to_table(name, row)
+
+        self.connect.commit()
 
         print('CREATED')
         return True
 
+
 def main():
     try:
-        assert len(argv) == 2, "Path for customer directory missing."
+        assert len(argv) == 2, "Path for CVS file is missing."
 
-        customer = Customer('guysharony', 'mysecretpassword', 'piscineds')
+        customer = Customers('piscineds', 'guysharony', 'mysecretpassword')
         customer.create_table_from_cvs(argv[1], 'items')
-        customer.dispose()
+        customer.close()
     except Exception as err:
         print(f'Error: {err}')
 

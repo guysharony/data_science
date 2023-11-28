@@ -58,12 +58,10 @@ class Customers(Connection):
             return False
 
         self.create_table(name, {
-            "event_time": "TIMESTAMP WITHOUT TIME ZONE",
-            "event_type": "VARCHAR(255)",
             "product_id": "INTEGER",
-            "price": "FLOAT",
-            "user_id": "BIGINT",
-            "user_session": "UUID"
+            "category_id": "BIGINT",
+            "category_code": "VARCHAR(255)",
+            "brand": "VARCHAR(255)"
         })
 
         with open(file, 'r') as csvfile:

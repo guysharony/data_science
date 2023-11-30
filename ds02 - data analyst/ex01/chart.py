@@ -27,21 +27,31 @@ class Customers(Connection):
 
     def pie(self, table: str):
         self.cursor.execute(f"""
-            SELECT event_type, COUNT(*) AS count
-            FROM {table}
-            WHERE user_session IS NOT NULL
-            GROUP BY event_type
-            ORDER BY count DESC;
+            SELECT
+                DATE(event_time) AS date,
+                COUNT(*) AS count_per_date
+            FROM 
+                customers
+            WHERE
+                event_type = 'purchase'
+            GROUP BY 
+                DATE(event_time)
+            ORDER BY 
+                DATE(event_time);
         """)
 
         dataset = dict(self.cursor.fetchall())
 
-        keys = list(dataset.keys())
+        dates = list(dataset.keys())
         values = list(dataset.values())
 
-        event_colors = {'view': 'blue', 'purchase': 'red', 'remove_from_cart': 'green', 'cart': 'orange'}
-        plt.pie(values, labels=keys, autopct='%1.1f%%', startangle=0, colors=[event_colors.get(event, 'gray') for event in keys])
-        plt.axis('equal')
+        plt.plot(dates, values, linestyle='-')
+        plt.xlabel("Years")
+        plt.ylabel("Number of customers")
+        tick_positions = [0, len(dates) // 4, 2 * len(dates) // 4, 3 * len(dates) // 4]
+        tick_labels = ["Oct", "Nov", "Dec", "Jan"]
+        plt.xticks(tick_positions, tick_labels)
+        plt.xlim(dates[0], dates[-1])
         plt.show()
 
 

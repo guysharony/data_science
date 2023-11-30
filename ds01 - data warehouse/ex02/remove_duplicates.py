@@ -24,6 +24,8 @@ class Customers(Connection):
         super().__init__(username, password, database)
 
     def remove_customers_duplicates(self):
+        print(f"[REMOVING DUPLICATES FROM TABLE - 'customers'] => ", end="", flush=True)
+
         self.cursor.execute(f"""
             CREATE TEMPORARY TABLE temporary_customers AS (
                 SELECT event_time, event_type, product_id, price, user_id, user_session
@@ -53,6 +55,8 @@ class Customers(Connection):
         """)
 
         self.connect.commit()
+
+        print("REMOVED")
 
 
 def main():

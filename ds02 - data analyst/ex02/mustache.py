@@ -26,6 +26,16 @@ class Customers(Connection):
     def __init__(self, username: str, password: str, database: str) -> None:
         super().__init__(username, password, database)
 
+    def average_cart_price(self):
+        self.cursor.execute(f"""
+            SELECT user_id, AVG(price) AS avg_cart_price
+            FROM customers
+            WHERE event_type = 'cart'
+            GROUP BY user_id;
+        """)
+
+        return [price[0] for price in self.cursor.fetchall()]
+
     def statistics(self, dataset: list[str]):
         count = len(dataset)
         mean = np.mean(dataset)
@@ -57,8 +67,41 @@ class Customers(Connection):
                 event_type = 'purchase';
         """)
 
-        dataset = [price[0] for price in self.cursor.fetchall()]
-        self.statistics(dataset)
+        prices = [price[0] for price in self.cursor.fetchall()]
+
+        self.statistics(prices)
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
+        ax1.boxplot(
+            prices,
+            widths=0.8,
+            vert=False,
+            notch=True
+        )
+        ax1.set_yticks([])
+        ax1.set_xlabel("price")
+
+        boxprops = dict(
+            facecolor='green',
+            edgecolor='black'
+        )
+        medianprops = dict(
+            linewidth=1,
+            color='black'
+        )
+        ax2.boxplot(
+            prices,
+            vert=False,
+            widths=0.8,
+            notch=True,
+            boxprops=boxprops,
+            medianprops=medianprops,
+            showfliers=False,
+            patch_artist=True
+        )
+        ax2.set_yticks([])
+        ax2.set_xlabel("price")
+        plt.tight_layout()
+        plt.show()
 
 def main():
     try:

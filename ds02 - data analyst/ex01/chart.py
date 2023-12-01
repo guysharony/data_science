@@ -82,6 +82,8 @@ class Customers(Connection):
         months = [datetime.strptime(str(date), '%Y-%m').strftime('%b') for date in dataset.keys()]
         counts = [sale for sale in dataset.values()]
 
+        plt.figure()
+
         plt.bar(months, counts)
         plt.ylabel('total sales in million of ₳')
         plt.xlabel('month')
@@ -121,7 +123,7 @@ class Customers(Connection):
 
         plt.figure()
 
-        plt.plot(dates, values, color='blue', linewidth=1)
+        plt.plot(dates, values, linewidth=1)
         plt.fill_between(dates, values, color='blue')
         plt.ylabel("average spend/customers in ₳")
 
@@ -133,6 +135,7 @@ class Customers(Connection):
         plt.xlim(dates[0], dates[-1])
         plt.ylim(bottom=0)
         plt.grid(which='both', linestyle='-', linewidth='0')
+
         plt.show()
 
 def main():

@@ -70,7 +70,43 @@ class Customers(Connection):
         prices = [price[0] for price in self.cursor.fetchall()]
 
         self.statistics(prices)
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
+
+        return prices
+
+    def average_cart_per_user(self):
+        self.cursor.execute(f"""
+            SELECT
+                user_id,
+                AVG(total_price) AS average_basket_price_per_customer
+            FROM (
+                SELECT
+                    user_id,
+                    user_session,
+                    SUM(price) AS total_price
+                FROM
+                    customers
+                WHERE
+                    event_type = 'cart'
+                GROUP BY
+                    user_id,
+                    user_session
+            ) AS basket_totals
+            GROUP BY
+                user_id
+            ORDER BY
+                user_id;
+        """)
+
+        return [cart[1] for cart in self.cursor.fetchall()]
+
+def main():
+    try:
+        customer = Customers('piscineds', 'guysharony', 'mysecretpassword')
+        prices = customer.prices()
+        average_cart_per_user = customer.average_cart_per_user()
+        customer.close()
+
+        fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(14, 6))
         ax1.boxplot(
             prices,
             widths=0.8,
@@ -100,14 +136,22 @@ class Customers(Connection):
         )
         ax2.set_yticks([])
         ax2.set_xlabel("price")
+
+        ax3.boxplot(
+            average_cart_per_user,
+            vert=False,
+            widths=0.8,
+            notch=True,
+            boxprops=boxprops,
+            medianprops=medianprops,
+            showfliers=False,
+            patch_artist=True
+        )
+        ax3.set_yticks([])
+        ax3.set_xlabel("price")
+
         plt.tight_layout()
         plt.show()
-
-def main():
-    try:
-        customer = Customers('piscineds', 'guysharony', 'mysecretpassword')
-        customer.prices()
-        customer.close()
     except Exception as err:
         print(f'Error: {err}')
 
